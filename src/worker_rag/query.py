@@ -5,8 +5,8 @@ from openai import OpenAI
 
 import os
 
-from src.rag.embed import embed_query
-from src.rag.load import get_collection
+from src.worker_rag.embed import embed_query
+from src.worker_rag.load import get_collection
 
 load_dotenv()
 

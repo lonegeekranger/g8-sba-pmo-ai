@@ -1,14 +1,17 @@
-# Agente 1 — RAG de Consulta PMO
+# Worker 1 — Búsqueda Semántica (RAG de Consulta PMO)
 
 **Curso:** Simulación Basada en Agentes — Programa de Inteligencia Artificial, UAI
 **Fecha:** Agosto 2026
 **Estado:** Desplegado y operativo
+**Rol en la plataforma:** Worker 1 de 4 agentes (ver `masterplan.md`) — atiende las consultas documentales que le delega el Orquestador
 
 ---
 
 ## 1. Qué es este agente
 
-Es el primer componente de la plataforma PMO-AI: un agente de **preguntas y respuestas sobre documentación de proyectos TI**, construido con el patrón RAG (Retrieval-Augmented Generation). Permite consultar en lenguaje natural el estado del portafolio, hitos vencidos, alertas de riesgo, métricas de desempeño y presupuesto, con **respuestas trazables**: cada afirmación cita el documento fuente y la sección de origen, como exige el diseño del proyecto.
+Es el **primer worker de la plataforma PMO-AI**: un agente especializado en **preguntas y respuestas sobre documentación de proyectos TI**, construido con el patrón RAG (Retrieval-Augmented Generation). Permite consultar en lenguaje natural el estado del portafolio, hitos vencidos, alertas de riesgo, métricas de desempeño y presupuesto, con **respuestas trazables**: cada afirmación cita el documento fuente y la sección de origen, como exige el diseño del proyecto.
+
+En la arquitectura final (4 agentes: Orquestador, Worker Semántico, Worker SQL, Fiscalizador), este worker responde a las consultas de tipo documental que le delega el Orquestador. Hoy opera de forma standalone detrás de su propio endpoint; cuando el Orquestador exista, este servicio quedará como su backend de búsqueda semántica.
 
 **Endpoint público:** `https://pmo-ai-101547847876.southamerica-west1.run.app`
 
@@ -101,7 +104,7 @@ Localmente:
 
 ```bash
 uv pip install -r requirements.txt
-uv run python -m src.rag.load data/          # carga documentos al índice
-uv run python -m src.rag.query "¿pregunta?"  # consulta por CLI
-uv run uvicorn src.rag.serve:app --port 8080 # API local
+uv run python -m src.worker_rag.load data/          # carga documentos al índice
+uv run python -m src.worker_rag.query "¿pregunta?"  # consulta por CLI
+uv run uvicorn src.worker_rag.serve:app --port 8080 # API local
 ```

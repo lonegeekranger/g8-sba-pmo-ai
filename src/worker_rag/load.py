@@ -5,8 +5,8 @@ from pathlib import Path
 import chromadb
 from dotenv import load_dotenv
 
-from src.rag.chunk import chunk_markdown
-from src.rag.embed import embed_texts
+from src.worker_rag.chunk import chunk_markdown
+from src.worker_rag.embed import embed_texts
 
 load_dotenv()
 

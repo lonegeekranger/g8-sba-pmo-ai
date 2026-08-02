@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from src.rag.query import ask
+from src.worker_rag.query import ask
 
 app = FastAPI(title="PMO-AI", version="0.1.0")
 
