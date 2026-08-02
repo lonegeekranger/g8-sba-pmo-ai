@@ -1,0 +1,12 @@
+.venv/
+.chroma/
+.git/
+docs/
+mirofish/
+sample-agents/
+secret-zone/
+.env
+.env.*
+!.env.example
+**/__pycache__/
+.DS_Store
