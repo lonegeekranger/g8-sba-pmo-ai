@@ -1,0 +1,14 @@
+# Uso:
+#   gcloud builds submit --config cloudbuild.yaml \
+#     --substitutions _AGENT=worker_rag,_IMAGE=<tag-imagen> .
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - src/${_AGENT}/Dockerfile
+      - -t
+      - ${_IMAGE}
+      - .
+images:
+  - ${_IMAGE}
