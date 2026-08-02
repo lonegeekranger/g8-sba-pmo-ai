@@ -18,6 +18,7 @@ class Source(BaseModel):
 class AskResponse(BaseModel):
     answer: str
     sources: list[Source]
+    tokens: int = 0
 
 
 @app.get("/health")

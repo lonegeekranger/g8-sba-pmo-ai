@@ -83,13 +83,12 @@ Se probaron 5 consultas reales contra el endpoint público:
 
 1. **Chroma sobre GCS FUSE:** Chroma usa SQLite internamente, que no tolera bien escrituras concurrentes sobre FUSE. Aceptable con 1 instancia y patrón de lectura; si el sistema crece, la migración natural es a pgvector (Cloud SQL) o Qdrant.
 2. **Actualización del índice es manual:** agregar un documento requiere correr el loader y sincronizar el bucket. Un Cloud Run Job o un trigger sobre el bucket automatizaría este paso.
-3. **Sin memoria conversacional:** cada consulta es independiente; no hay historial de interacciones (la tabla `interactions` del roadmap aún no existe).
+3. **Sin memoria conversacional:** cada consulta es independiente (esto es distinto de la tabla `interactions`, que sí registra el historial de consultas al orquestador — ver `src/orchestrator/AGENTE.md`).
 
 ## 8. Próximos pasos (roadmap del taller)
 
 - Worker de consulta SQL y agente orquestador con criterios de delegación (paso 3-4)
 - Agente fiscalizador que valide citas, detecte PII y verifique que la respuesta conteste la pregunta (paso 5)
-- Tabla `interactions` para trazabilidad de cada consulta (paso 7)
 - Evaluación de re-ranking / hybrid search sobre el retriever actual (paso 6)
 
 ## 9. Cómo probarlo

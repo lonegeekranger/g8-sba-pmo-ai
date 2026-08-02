@@ -8,6 +8,7 @@ import requests
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.table import Table
 
 DEFAULT_URL = "https://pmo-ai-orchestrator-101547847876.southamerica-west1.run.app"
 TIMEOUT = 120
@@ -44,6 +45,8 @@ def print_response(data: dict) -> None:
     fiscalizacion = data.get("fiscalizacion")
     if fiscalizacion and not fiscalizacion.get("ok", True):
         meta.append("fiscalizador: corrigió la respuesta")
+    if data.get("tokens") is not None:
+        meta.append(f"tokens: {data['tokens']}")
     if data.get("latency_ms") is not None:
         meta.append(f"{data['latency_ms'] / 1000:.1f}s")
     if meta:
@@ -102,6 +105,37 @@ def cmd_cargar(archivos: list[str]) -> None:
     )
 
 
+def cmd_stats(base_url: str) -> None:
+    try:
+        resp = requests.get(f"{base_url.rstrip('/')}/stats", timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.Timeout:
+        console.print("[red]Error: el servidor no respondió a tiempo.[/red]")
+        sys.exit(1)
+    except requests.ConnectionError:
+        console.print("[red]Error: no se pudo conectar al endpoint.[/red]")
+        sys.exit(1)
+    except requests.HTTPError as e:
+        console.print(f"[red]Error del servidor: HTTP {e.response.status_code}[/red]")
+        sys.exit(1)
+
+    table = Table(title="Estadísticas de trazabilidad (interactions)")
+    table.add_column("Métrica", style="bold")
+    table.add_column("Valor")
+
+    table.add_row("Total de interacciones", str(data.get("total_interactions", 0)))
+    table.add_row("Tokens totales", str(data.get("total_tokens", 0)))
+    table.add_row("Tokens promedio", str(data.get("avg_tokens", 0)))
+    table.add_row("Latencia promedio", f"{data.get('avg_latency_ms', 0)} ms")
+    table.add_row("Latencia mínima", f"{data.get('min_latency_ms', 0)} ms")
+    table.add_row("Latencia máxima", f"{data.get('max_latency_ms', 0)} ms")
+    table.add_row("Primera interacción", data.get("first_interaction") or "—")
+    table.add_row("Última interacción", data.get("last_interaction") or "—")
+
+    console.print(table)
+
+
 def main() -> None:
     base_url = os.environ.get("PMO_AI_URL", DEFAULT_URL)
     console.print("[bold]PMO-AI CLI[/bold] — consultas al orquestador en lenguaje natural")
@@ -140,5 +174,7 @@ def main() -> None:
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "cargar":
         cmd_cargar(sys.argv[2:])
+    elif len(sys.argv) > 1 and sys.argv[1] == "stats":
+        cmd_stats(os.environ.get("PMO_AI_URL", DEFAULT_URL))
     else:
         main()

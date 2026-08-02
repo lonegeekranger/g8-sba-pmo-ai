@@ -19,6 +19,7 @@ class AuditResponse(BaseModel):
     ok: bool
     issues: list[str]
     corrected: str
+    tokens: int = 0
 
 
 @app.get("/health")

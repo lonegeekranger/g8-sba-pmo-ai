@@ -74,10 +74,20 @@ Integración de los 4 agentes en local (puertos 8080–8083):
 
 1. **Delegación secuencial:** en ruta `both` los workers se llaman uno tras otro; paralelizarlos (asyncio) reduciría la latencia casi a la mitad.
 2. **Sin memoria conversacional:** cada consulta es independiente.
-3. **Sin registro de interacciones:** la tabla `interactions` (paso 7 del roadmap) aún no persiste query/respuesta/tokens/latencia.
-4. **Router sin few-shots:** el prompt usa solo criterios declarativos; un set de ejemplos mejoraría la precisión en preguntas ambiguas.
+3. **Router sin few-shots:** el prompt usa solo criterios declarativos; un set de ejemplos mejoraría la precisión en preguntas ambiguas.
+4. **`--max-instances=1` en el registro de interacciones:** SQLite sobre GCS FUSE no tolera escrituras concurrentes, así que el orquestador está limitado a una instancia. Con tráfico alto sería un cuello de botella (ver punto 7).
 
-## 7. Cómo probarlo localmente
+## 7. Registro de interacciones (paso 7 del roadmap)
+
+Cada `POST /ask` termina registrando la interacción en la tabla `interactions` (SQLite nativo, sin SQLAlchemy): `id, timestamp, query, response, tokens, latency`. Persiste en `gs://pmo-ai-vectordb/interactions/interactions.db`, montado por Cloud Storage FUSE — mismo mecanismo que usa el worker RAG para Chroma.
+
+Los `tokens` son la suma del `usage.total_tokens` de todas las llamadas LLM involucradas en la interacción: router + worker(s) delegado(s) + fiscalizador. Ese total se expone también en la respuesta de `/ask` (campo `tokens`).
+
+`GET /stats` expone agregados (`total_interactions`, `total_tokens`, `avg_tokens`, `avg_latency_ms`, `min/max_latency_ms`, primera/última interacción) sin exponer `query`/`response` de filas individuales, ya que el endpoint es público sin auth. El registro nunca rompe la respuesta al usuario: si falla la escritura, solo se loggea un warning.
+
+Detalle de diseño completo en `secret-zone/PLAN-trazabilidad.md`.
+
+## 8. Cómo probarlo localmente
 
 ```bash
 # 1. Levantar los workers (en terminales separadas)
@@ -95,4 +105,7 @@ uv run uvicorn src.orchestrator.serve:app --port 8081
 curl -X POST localhost:8081/ask \
   -H "Content-Type: application/json" \
   -d '{"query": "¿cuántos hitos están vencidos?"}'
+
+# 4. Ver estadísticas de trazabilidad
+curl localhost:8081/stats
 ```

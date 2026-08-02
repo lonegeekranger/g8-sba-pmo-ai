@@ -104,15 +104,22 @@ Probamos el endpoint público del orquestador con las 4 categorías de preguntas
 - **Latencia:** ~8 s consultas simples, ~15–29 s consultas mixtas con fiscalización
 - **Costo estimado:** < US$1 por 1.000 consultas
 
-## 5. Trabajo futuro
+## 5. Trazabilidad (paso 7 del roadmap)
 
-1. Tabla `interactions` para registrar cada consulta (paso 7 del roadmap): query, respuesta, tokens, latencia.
-2. Endurecer la comunicación interna: que workers y fiscalizador solo acepten llamadas del orquestador (IAM entre servicios, hoy son públicos).
-3. Evaluación formal del retriever: 10 consultas con precisión@k medida manualmente y prueba de hybrid search (paso 6).
-4. Paralelizar las llamadas a workers en la ruta `both` (hoy son secuenciales, casi duplica la latencia).
-5. Capa determinista de detección de PII (regex para RUT, tarjetas, emails) complementando al fiscalizador.
+Implementado: tabla `interactions` (SQLite, cliente nativo) que registra cada consulta del orquestador — `id, timestamp, query, response, tokens, latency`. Persiste en `gs://pmo-ai-vectordb/interactions/interactions.db`, montado por Cloud Storage FUSE (mismo mecanismo que Chroma). El orquestador corre con `--max-instances=1` para evitar escrituras concurrentes sobre SQLite-sobre-FUSE.
 
-## 6. Repositorio y cómo probar
+Los tokens se capturan sumando el `usage.total_tokens` de las 2 a 4 llamadas LLM que puede disparar una interacción (router, worker(s) delegado(s), fiscalizador). El total viaja también en la respuesta de `/ask` y se expone en `GET /stats` (agregados: total de interacciones, tokens y latencia totales/promedio/min/max) — nunca expone `query`/`response` individuales, ya que el endpoint es público sin auth.
+
+`cli.py` consume ambos: muestra los tokens de cada respuesta en la metadata, y el subcomando `uv run cli.py stats` imprime los agregados. Detalle completo del diseño en `secret-zone/PLAN-trazabilidad.md`.
+
+## 6. Trabajo futuro
+
+1. Endurecer la comunicación interna: que workers y fiscalizador solo acepten llamadas del orquestador (IAM entre servicios, hoy son públicos).
+2. Evaluación formal del retriever: 10 consultas con precisión@k medida manualmente y prueba de hybrid search (paso 6).
+3. Paralelizar las llamadas a workers en la ruta `both` (hoy son secuenciales, casi duplica la latencia).
+4. Capa determinista de detección de PII (regex para RUT, tarjetas, emails) complementando al fiscalizador.
+
+## 7. Repositorio y cómo probar
 
 **Repo:** estructura `src/{orchestrator, worker_rag, worker_sql, auditor}` + `data/` (documentos) + `docs/` (este documento y propuestas) + `cloudbuild.yaml`. Cada agente tiene su `AGENTE.md` con detalle técnico, decisiones y limitaciones.
 

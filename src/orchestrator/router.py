@@ -36,4 +36,6 @@ def decide_route(query: str) -> dict:
         temperature=0,
         response_format={"type": "json_object"},
     )
-    return json.loads(response.choices[0].message.content)
+    decision = json.loads(response.choices[0].message.content)
+    decision["tokens"] = response.usage.total_tokens if response.usage else 0
+    return decision

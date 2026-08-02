@@ -51,7 +51,8 @@ def ask(query: str) -> dict:
     )
     answer = response.choices[0].message.content
     sources = [{"fuente": h["fuente"], "seccion": h["seccion"]} for h in hits]
-    return {"answer": answer, "sources": sources}
+    tokens = response.usage.total_tokens if response.usage else 0
+    return {"answer": answer, "sources": sources, "tokens": tokens}
 
 
 if __name__ == "__main__":

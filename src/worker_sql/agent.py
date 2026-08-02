@@ -51,7 +51,9 @@ def generar_sql(query: str) -> dict:
         temperature=0,
         response_format={"type": "json_object"},
     )
-    return json.loads(response.choices[0].message.content)
+    resultado = json.loads(response.choices[0].message.content)
+    resultado["tokens"] = response.usage.total_tokens if response.usage else 0
+    return resultado
 
 
 def ejecutar_sql(sql: str) -> list[dict]:
@@ -65,7 +67,7 @@ def ejecutar_sql(sql: str) -> list[dict]:
         return [dict(row) for row in cursor.fetchall()]
 
 
-def redactar_respuesta(query: str, filas: list[dict], sql: str) -> str:
+def redactar_respuesta(query: str, filas: list[dict], sql: str) -> tuple[str, int]:
     client = OpenAI(
         api_key=os.environ["DEEPSEEK_API_KEY"],
         base_url="https://api.deepseek.com",
@@ -82,21 +84,25 @@ def redactar_respuesta(query: str, filas: list[dict], sql: str) -> str:
         ],
         temperature=0.2,
     )
-    return response.choices[0].message.content
+    tokens = response.usage.total_tokens if response.usage else 0
+    return response.choices[0].message.content, tokens
 
 
 def ask(query: str) -> dict:
     generado = generar_sql(query)
     sql = generado["sql"]
+    tokens = generado.get("tokens", 0)
     try:
         filas = ejecutar_sql(sql)
     except Exception as e:
         return {
             "answer": f"No pude ejecutar la consulta generada ({e}). SQL intentado: {sql}",
             "sources": [{"fuente": "datos_tabulares_proyecto", "seccion": "error SQL"}],
+            "tokens": tokens,
         }
-    answer = redactar_respuesta(query, filas, sql)
+    answer, tokens_respuesta = redactar_respuesta(query, filas, sql)
     return {
         "answer": f"{answer}\n\n_SQL ejecutado: `{sql}`_",
         "sources": [{"fuente": "datos_tabulares_proyecto", "seccion": f"SQL: {sql[:80]}"}],
+        "tokens": tokens + tokens_respuesta,
     }

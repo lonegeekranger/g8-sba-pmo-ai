@@ -54,9 +54,19 @@ Ejemplos de preguntas para probar:
 ¿cuáles son las métricas SPI y CPI del proyecto?
 ```
 
-Las consultas simples tardan ~8 s; las que combinan búsqueda documental y SQL con fiscalización pueden tardar ~30 s.
+Las consultas simples tardan ~8 s; las que combinan búsqueda documental y SQL con fiscalización pueden tardar ~30 s. Cada respuesta muestra también los tokens consumidos en la línea de metadata.
 
 > El endpoint por defecto es el orquestador en Cloud Run. Para apuntar a otra URL: `PMO_AI_URL=http://localhost:8080 uv run cli.py`
+
+### Estadísticas de uso
+
+Cada consulta al orquestador queda registrada (tabla `interactions`: query, respuesta, tokens, latencia). Para ver los agregados:
+
+```bash
+uv run cli.py stats
+```
+
+Muestra total de interacciones, tokens totales/promedio y latencia promedio/mínima/máxima — sin necesidad de credenciales GCP, es solo otra llamada HTTP al orquestador (`GET /stats`).
 
 ### Agregar documentos al agente
 

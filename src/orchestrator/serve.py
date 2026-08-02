@@ -12,11 +12,13 @@ from src.orchestrator.clients import (
     worker_rag_url,
     worker_sql_url,
 )
+from src.orchestrator.interactions import get_stats, init_db, log_interaction
 from src.orchestrator.router import decide_route
 
 load_dotenv()
 
 app = FastAPI(title="PMO-AI Orquestador", version="0.1.0")
+init_db()
 
 
 class AskRequest(BaseModel):
@@ -35,6 +37,18 @@ class AskResponse(BaseModel):
     workers_usados: list[str]
     fiscalizacion: dict | None
     latency_ms: int
+    tokens: int
+
+
+class StatsResponse(BaseModel):
+    total_interactions: int
+    total_tokens: int
+    avg_tokens: float
+    avg_latency_ms: float
+    min_latency_ms: int
+    max_latency_ms: int
+    first_interaction: str | None
+    last_interaction: str | None
 
 
 @app.get("/health")
@@ -98,11 +112,28 @@ def ask(request: AskRequest) -> AskResponse:
         if not fiscalizacion.get("ok", True) and fiscalizacion.get("corrected"):
             answer = fiscalizacion["corrected"]
 
+    tokens = decision.get("tokens", 0)
+    if respuesta_rag:
+        tokens += respuesta_rag.get("tokens", 0)
+    if respuesta_sql:
+        tokens += respuesta_sql.get("tokens", 0)
+    if fiscalizacion:
+        tokens += fiscalizacion.get("tokens", 0)
+
+    latency_ms = int((time.time() - start) * 1000)
+    log_interaction(request.query, answer, tokens, latency_ms)
+
     return AskResponse(
         answer=answer,
         sources=[Source(**s) for s in sources],
         ruta=ruta,
         workers_usados=workers_usados,
         fiscalizacion=fiscalizacion,
-        latency_ms=int((time.time() - start) * 1000),
+        latency_ms=latency_ms,
+        tokens=tokens,
     )
+
+
+@app.get("/stats", response_model=StatsResponse)
+def stats() -> StatsResponse:
+    return StatsResponse(**get_stats())

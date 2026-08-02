@@ -47,4 +47,5 @@ def audit(pregunta_original: str, borrador: str, fuentes_usadas: list[dict]) -> 
         "ok": bool(resultado.get("ok", False)),
         "issues": resultado.get("issues", []),
         "corrected": resultado.get("corrected", ""),
+        "tokens": response.usage.total_tokens if response.usage else 0,
     }

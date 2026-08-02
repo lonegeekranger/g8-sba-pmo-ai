@@ -63,7 +63,7 @@ La base SQLite se genera **en el build de la imagen Docker** (`RUN python -m src
 ## 6. Limitaciones conocidas
 
 1. **Datos estáticos:** actualizar los datos exige editar `seed.py` y redesplegar. Un pipeline de sincronización desde los documentos (o una fuente transaccional) es el paso natural.
-2. **Sin tabla `interactions`:** el paso 7 del roadmap (trazabilidad de interacciones) irá en una tabla separada, escrita por el orquestador, no por este worker.
+2. **`interactions` vive en el orquestador, no aquí:** el paso 7 del roadmap (trazabilidad) se implementó como una tabla separada, escrita por el orquestador — este worker solo aporta sus `tokens` a la suma total (ver `src/orchestrator/AGENTE.md`).
 3. **Esquema pequeño:** preguntas que crucen documentos y tablas (ej. "compara lo que dice el documento con los números") dependen de que el orquestador use la ruta `both` y el fiscalizador unifique, como se verificó en la integración.
 4. **Un solo dialecto:** el prompt está afinado para SQLite; migrar a Postgres requiere ajustar el esquema descrito en el prompt.
 
