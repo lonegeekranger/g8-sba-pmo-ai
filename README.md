@@ -26,6 +26,34 @@ Toda respuesta es **trazable a los documentos fuente**, con citas explícitas de
 - **Trazabilidad:** cada respuesta incluye citas explícitas del nombre del proyecto y sección de origen.
 - **Escalabilidad:** permite agregar fácilmente más proyectos o integrar workers especializados (alertas, presupuestos).
 
+## Arquitectura
+
+PMO-AI es un sistema multi-agente: un orquestador recibe la consulta, decide la ruta (semántica, SQL o ambas), delega a los workers correspondientes y fiscaliza la respuesta antes de entregarla.
+
+```mermaid
+flowchart TD
+    U[Usuario] -->|POST /ask| ORQ[Orquestador<br>pmo-ai-orchestrator]
+
+    ORQ -->|ruta semantic| RAG[Worker RAG<br>pmo-ai-worker-rag]
+    ORQ -->|ruta sql| SQL[Worker SQL<br>pmo-ai-worker-sql]
+    ORQ -->|ruta both| RAG
+    ORQ --> SQL
+
+    RAG --> VDB[(Chroma<br>bucket GCS)]
+    VDB -.->|embeddings| VAI[Vertex AI<br>text-embedding-004]
+    SQL --> DB[(SQLite<br>4 tablas del proyecto)]
+
+    RAG --> ORQ
+    SQL --> ORQ
+
+    ORQ -->|borrador| AUD[Fiscalizador<br>pmo-ai-auditor]
+    AUD -->|ok / issues / corrected| ORQ
+
+    ORQ -->|respuesta final + citas| U
+```
+
+Detalle completo de cada agente y decisiones de diseño en [`docs/IMPLEMENTACION.md`](docs/IMPLEMENTACION.md).
+
 ## Estructura del repositorio
 
 ```
