@@ -12,6 +12,14 @@ Material del taller "10 pasos para llevar un agente a producción" (UAI). Es la 
 
 Documento técnico consolidado del proyecto PMO-AI. Describe la metodología de trabajo incremental (documento → RAG → multi-agente), la arquitectura de 4 agentes (orquestador, worker RAG, worker SQL, fiscalizador), la infraestructura en GCP (Cloud Run, Cloud Storage FUSE, Secret Manager), las decisiones de diseño relevantes (DeepSeek como LLM, chunking por secciones, router por LLM, degradación elegante) y los resultados de validación contra el endpoint público. Es el documento de referencia para entender cómo está construido el sistema.
 
+## `METRICAS.md`
+
+Reporte de latencia y costo del sistema desplegado, con datos medidos sobre interacciones reales (registradas en `.interactions/interactions.db`): tiempos de respuesta por tipo de ruta (simple vs mixta), consumo de tokens por consulta y estimación de costo por 1.000 consultas (DeepSeek + embeddings Vertex AI + Cloud Run).
+
+## `MEJORAS_PENDIENTES.md`
+
+Trabajo futuro pendiente de implementación: paralelizar llamadas a workers en la ruta mixta, evaluación formal del retriever (precisión@k), y endurecer la comunicación interna con IAM entre servicios. Incluye también las limitaciones conocidas por componente que no están priorizadas para el corto plazo.
+
 ## `Ferretodo_Pet_MiroFish_v2.pdf`
 
 Documento semilla (SEED) que usamos como input para el análisis con MiroFish en clases pasadas del curso. Contiene el contexto de negocio de Ferretodo a partir del cual la simulación multi-agente de MiroFish generó los insumos que luego consolidamos en el documento de proyecto. Es el origen de la cadena documental: seed → análisis MiroFish → documento PMO sintético.
