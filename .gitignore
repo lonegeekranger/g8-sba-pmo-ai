@@ -34,3 +34,4 @@ logs/
 *.sqlite3
 *.duckdb
 *.parquet
+src/worker_sql/proyecto.db
