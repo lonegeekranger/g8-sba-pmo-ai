@@ -1,0 +1,15 @@
+[project]
+name = "pmo-ai"
+version = "0.1.0"
+description = "Agente de inteligencia operacional para la gestión de proyectos TI (PMO)"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb",
+    "google-genai",
+    "openai",
+    "fastapi",
+    "uvicorn",
+    "python-dotenv",
+    "requests",
+    "rich",
+]
